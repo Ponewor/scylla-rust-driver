@@ -120,15 +120,16 @@ impl Murmur3Partitioner {
 
 impl Partitioner for Murmur3Partitioner {
     fn hash(pk: Bytes) -> Token {
-        Token {
-            value: Self::hash3_x64_128(&pk) as i64,
-        }
+        let value = Self::hash3_x64_128(&pk) as i64;
+        println!("Murmur3Partitioner {:?} - {}", pk, value);
+        Token { value }
     }
 }
 
 impl Partitioner for CDCPartitioner {
     fn hash(mut pk: Bytes) -> Token {
         let value = if pk.len() < 8 { i64::MIN } else { pk.get_i64() };
+        println!("CDCPartitioner {:?} - {}", pk, value);
         Token { value }
     }
 }

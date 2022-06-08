@@ -80,6 +80,10 @@ impl PreparedStatement {
         &self,
         bound_values: &SerializedValues,
     ) -> Result<Bytes, PartitionKeyError> {
+        println!(
+            "Compute pk for {:?} by {} with {:?}",
+            bound_values, self.statement, self.metadata
+        );
         let mut buf = BytesMut::new();
 
         if self.metadata.pk_indexes.len() == 1 {
@@ -95,6 +99,7 @@ impl PreparedStatement {
             {
                 buf.extend_from_slice(v);
             }
+            println!("Computed value1 is {:?}", buf);
             return Ok(buf.into());
         }
         // Iterate on values using sorted pk_indexes (see deser_prepared_metadata),
@@ -108,6 +113,7 @@ impl PreparedStatement {
         // At each iteration values_iter.nth(0) will roughly correspond to values[values_iter_offset],
         // so values[pk_index.index] will be retrieved with values_iter.nth(pk_index.index - values_iter_offset)
         let mut values_iter_offset = 0;
+        println!("PK indices {:?}", self.metadata.pk_indexes);
         for pk_index in &self.metadata.pk_indexes {
             // Find value matching current pk_index
             let next_val = values_iter
@@ -122,6 +128,7 @@ impl PreparedStatement {
             }
             values_iter_offset = pk_index.index + 1;
         }
+        println!("PK values {:?}", pk_values);
         // Add values' bytes
         buf.reserve(buf_size);
         for v in pk_values.iter().flatten() {
@@ -134,6 +141,7 @@ impl PreparedStatement {
             buf.extend_from_slice(v);
             buf.put_u8(0);
         }
+        println!("Computed value2 is {:?}", buf);
         Ok(buf.into())
     }
 
